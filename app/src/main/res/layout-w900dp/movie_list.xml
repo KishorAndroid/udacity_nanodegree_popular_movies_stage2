@@ -1,0 +1,48 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:baselineAligned="false"
+        android:divider="?android:attr/dividerHorizontal"
+        android:orientation="horizontal"
+        android:showDividers="middle"
+        android:weightSum="100"
+        tools:context="com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.MovieListActivity">
+
+        <!--
+        This layout is a two-pane layout for the Movies
+        master/detail flow.
+
+        -->
+
+        <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/movies_grid"
+            android:name="com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.MovieListFragment"
+            android:layout_width="0dp"
+            android:layout_weight="40"
+            android:layout_height="match_parent"
+            app:layoutManager="LinearLayoutManager"
+            tools:context="com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.MovieListActivity"
+            tools:listitem="@layout/movie_list_content" />
+
+        <FrameLayout
+            android:id="@+id/movie_detail_container"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="60" />
+    </LinearLayout>
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/favourite_movie"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:src="@android:drawable/btn_star_big_off" />
+</RelativeLayout>

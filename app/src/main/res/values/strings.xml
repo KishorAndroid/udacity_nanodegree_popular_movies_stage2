@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Popular Movies Stage 2</string>
+    <string name="title_movie_detail">Movie Detail</string>
+    <string-array name="sort_order_array">
+        <item>Most Popular</item>
+        <item>Highest Rated</item>
+        <item>My Favourites</item>
+    </string-array>
+    <string name="most_popular">Most Popular</string>
+    <string name="release_date">Release Date</string>
+    <string name="average_rating">Rating Average</string>
+    <string name="highest_rated">Highest Rated</string>
+    <string name="API_KEY">YOUR_API_KEY_HERE</string>
+    <string name="title_activity_movie_detail">MovieDetailActivity</string>
+</resources>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.appdevelopkar.stage2.popularmovies.popularmoviesstage2">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:name=".application.App"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".MovieListActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".MovieDetailActivity"
+            android:label="@string/title_movie_detail"
+            android:parentActivityName=".MovieListActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.MovieListActivity" />
+        </activity>
+        <provider
+            android:name=".data.provider.PopularMoviesProvider"
+            android:authorities="com.appdevelopkar.stage2.movies.popularmoviesstage2.data.provider"
+            android:exported="false" />
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="c3dd7bf5e3cbe7fdb6aaf5c7c882d73e1366a596" />
+    </application>
+
+</manifest>
