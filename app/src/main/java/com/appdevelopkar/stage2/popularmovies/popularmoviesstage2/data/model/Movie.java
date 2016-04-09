@@ -212,18 +212,31 @@ public class Movie implements Parcelable {
 
     protected Movie(Parcel in) {
         mPosterPath = in.readString();
+        setPosterPath(mPosterPath);
         mAdult = in.readByte() != 0x00;
+        setAdult(mAdult);
         mOverview = in.readString();
+        setOverview(mOverview);
         mReleaseDate = in.readString();
+        setReleaseDate(mReleaseDate);
         mId = in.readInt();
+        setId(mId);
         mOriginalTitle = in.readString();
+        setOriginalTitle(mOriginalTitle);
         mOriginalLanguage = in.readString();
+        setOriginalLanguage(mOriginalLanguage);
         mTitle = in.readString();
+        setTitle(mTitle);
         mBackdropPath = in.readString();
+        setBackdropPath(mBackdropPath);
         mPopularity = in.readDouble();
+        setPopularity(mPopularity);
         mVoteCount = in.readDouble();
+        setVoteCount(mVoteCount);
         mVoteAverage = in.readDouble();
+        setVoteAverage(mVoteAverage);
         mIsFavourite = in.readByte() != 0;
+        setIsFavourite(mIsFavourite);
     }
 
     @Override

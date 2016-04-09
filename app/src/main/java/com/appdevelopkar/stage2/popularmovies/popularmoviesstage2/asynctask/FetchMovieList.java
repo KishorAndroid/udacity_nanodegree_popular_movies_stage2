@@ -115,8 +115,6 @@ public class FetchMovieList extends AsyncTask<String, Void, ArrayList<Movie>> {
                 movie.setPopularity(object.getDouble("popularity"));
                 movie.setVoteCount(object.getDouble("vote_count"));
                 movie.setVoteAverage(object.getDouble("vote_average"));
-                Log.d("Movie", "Movie AsyncTask " + movie.getVoteAverage() + " / " + movie.getVoteCount());
-                Uri uri = context.getContentResolver().insert(PopularMoviesProvider.MOVIE_CONTENT_URI, movie.getContentValues());
                 movies.add(movie);
             }
 
@@ -149,6 +147,7 @@ public class FetchMovieList extends AsyncTask<String, Void, ArrayList<Movie>> {
         super.onPostExecute(movies);
         Intent intent = new Intent("movies-fetched");
         intent.putExtra("FILTER_NAME",sortOrder);
+        intent.putParcelableArrayListExtra("movieList", fetchedMovies);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 }

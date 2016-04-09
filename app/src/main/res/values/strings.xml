@@ -10,6 +10,6 @@
     <string name="release_date">Release Date</string>
     <string name="average_rating">Rating Average</string>
     <string name="highest_rated">Highest Rated</string>
-    <string name="API_KEY">YOUR_API_KEY_HERE</string>
+    <!--<string name="API_KEY">YOUR_API_KEY_HERE</string>-->
     <string name="title_activity_movie_detail">MovieDetailActivity</string>
 </resources>

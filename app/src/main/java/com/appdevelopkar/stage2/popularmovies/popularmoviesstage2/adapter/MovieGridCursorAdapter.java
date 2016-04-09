@@ -1,7 +1,7 @@
 package com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.adapter;
 
 import android.content.Context;
-import android.os.Bundle;
+import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,21 +15,35 @@ import com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.data.model.Mov
 import com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.util.Constants;
 import com.squareup.picasso.Picasso;
 
-import java.util.List;
-
 /**
  * Created by kishor on 3/2/16.
  */
-public class MovieGridAdapter extends RecyclerView.Adapter<MovieGridAdapter.MovieGridViewHolder>{
+public class MovieGridCursorAdapter extends CursorRecyclerViewAdapter<MovieGridCursorAdapter.MovieGridViewHolder>{
 
     private Context context;
-    private List<Movie> movieList;
     MovieSelectedListener mCallback;
 
-    public MovieGridAdapter(Context context, List<Movie> movieList) {
+    public MovieGridCursorAdapter(Context context, Cursor cursor){
+        super(context,cursor);
         this.context = context;
-        this.movieList = movieList;
         mCallback = (MovieSelectedListener) context;
+    }
+
+    @Override
+    public void onBindViewHolder(MovieGridViewHolder holder, Cursor cursor) {
+        final Movie movie = new Movie(cursor);
+        Picasso.with(context)
+                .load(Constants.THUMBNAIL_BASE_URL + movie.getPosterPath())
+                .placeholder(R.drawable.placeholder)
+                .error(R.drawable.placeholder)
+                .into(holder.movieThumbnail);
+        holder.movieThumbnail.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(context, movie.getTitle(), Toast.LENGTH_SHORT).show();
+                mCallback.onMovieSelected(movie);
+            }
+        });
     }
 
     @Override
@@ -37,26 +51,6 @@ public class MovieGridAdapter extends RecyclerView.Adapter<MovieGridAdapter.Movi
         View layoutView = LayoutInflater.from(parent.getContext()).inflate(R.layout.grid_item, null);
         MovieGridViewHolder movieGridViewHolder = new MovieGridViewHolder(layoutView);
         return movieGridViewHolder;
-    }
-
-    @Override
-    public void onBindViewHolder(MovieGridViewHolder holder, final int position) {
-        Picasso.with(context).load(Constants.THUMBNAIL_BASE_URL + movieList.get(position).getPosterPath())
-                .placeholder(R.drawable.placeholder)
-                .error(R.drawable.placeholder)
-                .into(holder.movieThumbnail);
-        holder.movieThumbnail.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(context, movieList.get(position).getTitle(), Toast.LENGTH_SHORT).show();
-                mCallback.onMovieSelected(movieList.get(position));
-            }
-        });
-    }
-
-    @Override
-    public int getItemCount() {
-        return movieList.size();
     }
 
     public class MovieGridViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{

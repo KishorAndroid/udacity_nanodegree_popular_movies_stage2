@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -64,16 +65,14 @@ public class MovieDetailActivity extends AppCompatActivity {
                 if(movie.getIsFavourite()){
                     movie.setIsFavourite(false);
                     fab.setImageResource(android.R.drawable.btn_star_big_off);
+                    MovieDetailActivity.this.getContentResolver().delete(PopularMoviesProvider.MOVIE_CONTENT_URI, "id = ?", new String[]{movie.getId() + ""});
                 }else {
                     movie.setIsFavourite(true);
                     fab.setImageResource(android.R.drawable.btn_star_big_on);
+                    Uri uri = MovieDetailActivity.this.getContentResolver().insert(PopularMoviesProvider.MOVIE_CONTENT_URI, movie.getContentValues());
                     Snackbar.make(view, "Movie " + movie.getTitle() + " is favourited", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
-                getContentResolver().update(PopularMoviesProvider.MOVIE_CONTENT_URI,
-                        movie.getContentValues(),
-                        MovieTable.ID + "=?",
-                        new String[]{String.valueOf(movie.getId())});
             }
         });
 

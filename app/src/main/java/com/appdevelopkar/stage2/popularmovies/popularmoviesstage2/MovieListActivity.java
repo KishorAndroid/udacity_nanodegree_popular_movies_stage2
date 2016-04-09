@@ -5,27 +5,26 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 
 import com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.adapter.MovieGridAdapter;
+import com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.adapter.MovieGridCursorAdapter;
 import com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.asynctask.FetchMovieList;
 import com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.data.database.table.MovieTable;
 import com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.data.model.Movie;
@@ -44,19 +43,21 @@ import java.util.ArrayList;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class MovieListActivity extends AppCompatActivity implements MovieGridAdapter.MovieSelectedListener, LoaderManager.LoaderCallbacks<Cursor>{
+public class MovieListActivity extends AppCompatActivity implements MovieSelectedListener{
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
     private boolean mTwoPane;
-
     private MovieGridAdapter movieGridAdapter;
+    private MovieGridCursorAdapter movieGridCursorAdapter;
     private GridLayoutManager gridLayoutManager;
     private RecyclerView movieGridView;
     private Spinner spinner;
+    private ProgressBar progressBar;
     private FloatingActionButton favouriteMovieFab;
+    private ArrayList<Movie> movies;
     private Movie movie;
 
     @Override
@@ -66,17 +67,14 @@ public class MovieListActivity extends AppCompatActivity implements MovieGridAda
 
         setUpViews();
         setUpListeners();
-
-        movieGridAdapter = new MovieGridAdapter(this, null);
-        movieGridView.setAdapter(movieGridAdapter);
-
-        getSupportLoaderManager().initLoader(0, null, this);
     }
 
     private void setUpViews(){
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        progressBar = (ProgressBar) findViewById(R.id.content_loading);
 
         movieGridView = (RecyclerView) findViewById(R.id.movies_grid);
         movieGridView.setHasFixedSize(true);
@@ -103,6 +101,8 @@ public class MovieListActivity extends AppCompatActivity implements MovieGridAda
             favouriteMovieFab = (FloatingActionButton) findViewById(R.id.favourite_movie);
         }
         movieGridView.setLayoutManager(gridLayoutManager);
+
+        changeSortOrder(Constants.MOST_POPULAR);
     }
 
     private void setUpListeners(){
@@ -124,23 +124,22 @@ public class MovieListActivity extends AppCompatActivity implements MovieGridAda
                     if (movie.getIsFavourite()) {
                         movie.setIsFavourite(false);
                         favouriteMovieFab.setImageResource(android.R.drawable.btn_star_big_off);
+                        MovieListActivity.this.getContentResolver().delete(PopularMoviesProvider.MOVIE_CONTENT_URI, "id = ?", new String[]{movie.getId()+""});
                     } else {
                         movie.setIsFavourite(true);
                         favouriteMovieFab.setImageResource(android.R.drawable.btn_star_big_on);
+                        Uri uri = MovieListActivity.this.getContentResolver().insert(PopularMoviesProvider.MOVIE_CONTENT_URI, movie.getContentValues());
                         Snackbar.make(view, "Movie " + movie.getTitle() + " is favourited", Snackbar.LENGTH_LONG)
                                 .setAction("Action", null).show();
                     }
-                    getContentResolver().update(PopularMoviesProvider.MOVIE_CONTENT_URI,
-                            movie.getContentValues(),
-                            MovieTable.ID + "=?",
-                            new String[]{String.valueOf(movie.getId())});
                 }
             });
         }
     }
 
     private void changeSortOrder(int filter){
-        Cursor cursor = null;
+        progressBar.setVisibility(View.VISIBLE);
+        movieGridView.setAdapter(null);
         switch (filter){
             case Constants.MOST_POPULAR:
                 new FetchMovieList(this).execute(Constants.SORT_BY_MOST_POPULAR);
@@ -149,11 +148,17 @@ public class MovieListActivity extends AppCompatActivity implements MovieGridAda
                 new FetchMovieList(this).execute(Constants.SORT_BY_MOST_RATED);
                 break;
             case Constants.FAVOURITED:
-                cursor = getContentResolver().query(PopularMoviesProvider.MOVIE_CONTENT_URI, null, MovieTable.IS_FAVOURITE + " = ?", new String[]{"1"}, null);
+                Cursor cursor = getContentResolver().query(PopularMoviesProvider.MOVIE_CONTENT_URI, null, MovieTable.IS_FAVOURITE + " = ?", new String[]{"1"}, null);
+                showFavouriteMovies(cursor);
                 break;
         }
-        if(cursor!=null){
-            updateUI(cursor);
+    }
+
+    private void showFavouriteMovies(Cursor cursor){
+        if(cursor != null && cursor.getCount()>0) {
+            progressBar.setVisibility(View.GONE);
+            movieGridCursorAdapter = new MovieGridCursorAdapter(this, cursor);
+            movieGridView.setAdapter(movieGridCursorAdapter);
         }
     }
 
@@ -166,46 +171,17 @@ public class MovieListActivity extends AppCompatActivity implements MovieGridAda
                 new IntentFilter("trailers-fetched"));
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMovieListReceiver);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mShareIntentReceiver);
-    }
-
     private BroadcastReceiver mMovieListReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String filterName = intent.getStringExtra("FILTER_NAME");
-            Cursor cursor = null;
-            if(filterName.equalsIgnoreCase(Constants.SORT_BY_MOST_POPULAR)){
-                cursor = getContentResolver().query(PopularMoviesProvider.MOVIE_CONTENT_URI, null, null, null, MovieTable.POPULARITY + " DESC");
-            }
-            if(filterName.equalsIgnoreCase(Constants.SORT_BY_MOST_RATED)){
-                cursor = getContentResolver().query(PopularMoviesProvider.MOVIE_CONTENT_URI, null, null, null, MovieTable.VOTE_AVERAGE + " DESC");
-            }
-            if(cursor!=null){
-                updateUI(cursor);
+            movies = intent.getParcelableArrayListExtra("movieList");
+            if(movies != null && !movies.isEmpty()) {
+                progressBar.setVisibility(View.GONE);
+                movieGridAdapter = new MovieGridAdapter(MovieListActivity.this, movies);
+                movieGridView.setAdapter(movieGridAdapter);
             }
         }
     };
-
-    private void updateUI(Cursor cursor){
-        movieGridAdapter.swapCursor(cursor);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        if(mTwoPane) {
-            // Inflate menu resource file.
-            getMenuInflater().inflate(R.menu.share_menu, menu);
-            // Locate MenuItem with ShareActionProvider
-            MenuItem item = menu.findItem(R.id.action_share);
-            // Fetch and store ShareActionProvider
-            mShareActionProvider = (android.support.v7.widget.ShareActionProvider) MenuItemCompat.getActionProvider(item);
-        }
-        return super.onCreateOptionsMenu(menu);
-    }
 
     private BroadcastReceiver mShareIntentReceiver = new BroadcastReceiver() {
         @Override
@@ -221,6 +197,26 @@ public class MovieListActivity extends AppCompatActivity implements MovieGridAda
             }
         }
     };
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mMovieListReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mShareIntentReceiver);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        if(mTwoPane) {
+            // Inflate menu resource file.
+            getMenuInflater().inflate(R.menu.share_menu, menu);
+            // Locate MenuItem with ShareActionProvider
+            MenuItem item = menu.findItem(R.id.action_share);
+            // Fetch and store ShareActionProvider
+            mShareActionProvider = (android.support.v7.widget.ShareActionProvider) MenuItemCompat.getActionProvider(item);
+        }
+        return super.onCreateOptionsMenu(menu);
+    }
 
     private android.support.v7.widget.ShareActionProvider mShareActionProvider;
     private void setShareIntent(Intent shareIntent) {
@@ -252,22 +248,6 @@ public class MovieListActivity extends AppCompatActivity implements MovieGridAda
             intent.putExtras(bundle);
             startActivity(intent);
         }
-    }
-
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Log.d("Loader","onCreateLoader " + id);
-        return new CursorLoader(this, PopularMoviesProvider.MOVIE_CONTENT_URI, null, null, null, MovieTable.POPULARITY + " DESC");
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        movieGridAdapter.swapCursor(data);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-        movieGridAdapter.swapCursor(null);
     }
 
     @Override

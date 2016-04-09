@@ -19,17 +19,30 @@
 
         -->
 
-        <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
-            android:id="@+id/movies_grid"
-            android:name="com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.MovieListFragment"
+        <RelativeLayout
             android:layout_width="0dp"
             android:layout_weight="40"
-            android:layout_height="match_parent"
-            app:layoutManager="LinearLayoutManager"
-            tools:context="com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.MovieListActivity"
-            tools:listitem="@layout/movie_list_content" />
+            android:layout_height="match_parent">
+            <ProgressBar
+                android:id="@+id/content_loading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:visibility="gone"
+                style="@android:style/Widget.Holo.ProgressBar.Large"
+                android:layout_margin="5dp"/>
 
+            <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:id="@+id/movies_grid"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:name="com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.MovieListFragment"
+                app:layoutManager="LinearLayoutManager"
+                tools:context="com.appdevelopkar.stage2.popularmovies.popularmoviesstage2.MovieListActivity"
+                tools:listitem="@layout/movie_list_content" />
+        </RelativeLayout>
         <FrameLayout
             android:id="@+id/movie_detail_container"
             android:layout_width="0dp"
